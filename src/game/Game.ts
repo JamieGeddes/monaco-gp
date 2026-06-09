@@ -210,6 +210,10 @@ export class Game {
           bestLap: this.lapTimer.bestMs,
           fps: +this.engine.getFps().toFixed(0),
           audio: this.audio?.probe() ?? null,
+          latAccel: +this.vehicle.latAccel.toFixed(3),
+          longAccel: +this.vehicle.longAccel.toFixed(3),
+          camX: +this.camera.camera.position.x.toFixed(5),
+          camPitch: +this.camera.camera.rotation.x.toFixed(5),
         };
       },
     };

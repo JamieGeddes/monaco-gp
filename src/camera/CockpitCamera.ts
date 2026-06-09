@@ -2,9 +2,9 @@ import { Quaternion, Scene, TransformNode, UniversalCamera, Vector3 } from '@bab
 import { Vehicle } from '../car/Vehicle';
 
 const HEAD_POS = new Vector3(0, 0.78, 0.18); // driver eye, relative to chassis center
-const G_LATERAL = 0.010;  // m per m/s^2
-const G_PITCH = 0.0035;   // rad per m/s^2
-const ROT_SMOOTH = 0.32;  // slerp factor per frame at 60 fps
+const G_LATERAL = 0.008;  // m per m/s^2
+const G_PITCH = 0.003;    // rad per m/s^2
+const ROT_SMOOTH = 0.2;   // slerp factor per frame at 60 fps
 
 /** First-person cockpit camera: parented head node with rotational low-pass + subtle G effects. */
 export class CockpitCamera {
@@ -35,11 +35,14 @@ export class CockpitCamera {
     const m = root.getWorldMatrix();
     Vector3.TransformCoordinatesToRef(HEAD_POS, m, this.head.position);
 
-    // subtle G effects in camera-local space
-    const lat = Math.max(-30, Math.min(30, this.vehicle.latAccel));
-    const lon = Math.max(-30, Math.min(30, this.vehicle.longAccel));
+    // subtle G effects in camera-local space: smoothed accel through a saturating
+    // response, faded out entirely while accel is noisy (wall grinding) — clean
+    // cornering/braking leans the view, impacts can't slam it
+    const calm = Math.max(0, Math.min(1, 1 - (this.vehicle.gNoise - 5) / 10));
+    const lat = 15 * Math.tanh(this.vehicle.latAccelSmooth / 14) * calm;
+    const lon = 15 * Math.tanh(this.vehicle.longAccelSmooth / 14) * calm;
     this.camera.position.set(-lat * G_LATERAL, 0, 0);
-    this.camera.rotation.set(lon * G_PITCH, 0, lat * 0.004);
+    this.camera.rotation.set(lon * G_PITCH, 0, lat * 0.003);
   }
 
   snap(): void {

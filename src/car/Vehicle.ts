@@ -11,8 +11,11 @@ const COM_LOCAL = new Vector3(0, -0.25, 0);
 const SUSPENSION_REST = 0.3;
 const WHEEL_RADIUS = 0.33;
 const SPRING_K = 130000;   // N/m
-const SPRING_C = 9000;     // N·s/m
-const ARB_K = 60000;       // anti-roll bar N/m per meter of compression difference
+// Damper uses a one-frame-delayed compression rate; at 60 Hz that feedback is only
+// stable for roughly c < 0.5*m_corner/dt (~6000). Keep well under it and clamp.
+const SPRING_C = 4200;     // N·s/m
+const MAX_DAMPER_FORCE = 5500; // N
+const ARB_K = 35000;       // anti-roll bar N/m per meter of compression difference
 const MAX_WHEEL_FORCE = 11000; // N, cap to avoid spring catapults in wall hits
 const MU_ROAD = 1.9;
 const CORNERING_STIFF = 14; // per rad, × Fz
@@ -50,8 +53,12 @@ export class Vehicle {
   // state for HUD/audio/camera
   speed = 0;          // forward m/s (signed)
   speedKmh = 0;
-  latAccel = 0;       // m/s^2, for camera sway
+  latAccel = 0;       // m/s^2, raw per-step
   longAccel = 0;
+  latAccelSmooth = 0; // low-passed, for camera G-effects
+  longAccelSmooth = 0;
+  /** Low-passed |raw - smooth| accel: ~0 in clean driving, large while grinding walls. */
+  gNoise = 0;
   reversing = false;
 
   private brakeStillMs = 0;
@@ -102,6 +109,9 @@ export class Vehicle {
     this.body.setAngularVelocity(Vector3.Zero());
     this.drivetrain.reset();
     this.prevVel.setAll(0);
+    this.latAccelSmooth = 0;
+    this.longAccelSmooth = 0;
+    this.gNoise = 0;
     this.reversing = false;
     this.brakeStillMs = 0;
     for (const w of this.wheels) { w.compression = 0; w.prevCompression = 0; w.spinAngle = 0; }
@@ -123,11 +133,19 @@ export class Vehicle {
     this.speed = Vector3.Dot(this.vel, fwd);
     this.speedKmh = Math.abs(this.speed) * 3.6;
 
-    // accelerations for camera G-effects
+    // accelerations for camera G-effects: low-passed (raw per-frame deltas carry
+    // solver/suspension noise that reads as screen shake), faded out at low speed
     this.tmpA.copyFrom(this.vel).subtractInPlace(this.prevVel).scaleInPlace(1 / dt);
     this.latAccel = Vector3.Dot(this.tmpA, right);
     this.longAccel = Vector3.Dot(this.tmpA, fwd);
     this.prevVel.copyFrom(this.vel);
+    const speedFade = Math.min(this.vel.length() / 6, 1);
+    const lp = 1 - Math.exp(-dt / 0.2);
+    this.latAccelSmooth += (this.latAccel * speedFade - this.latAccelSmooth) * lp;
+    this.longAccelSmooth += (this.longAccel * speedFade - this.longAccelSmooth) * lp;
+    const noise = Math.abs(this.latAccel * speedFade - this.latAccelSmooth)
+      + Math.abs(this.longAccel * speedFade - this.longAccelSmooth);
+    this.gNoise += (noise - this.gNoise) * (1 - Math.exp(-dt / 0.25));
 
     // reverse mode bookkeeping: hold brake at standstill to back out of walls
     if (this.brake > 0.3 && Math.abs(this.speed) < 0.6) this.brakeStillMs += dt * 1000;
@@ -167,10 +185,11 @@ export class Vehicle {
 
       // suspension (applied at hardpoint for stability), with anti-roll coupling
       const compRate = (w.compression - w.prevCompression) / dt;
+      const damper = Math.max(-MAX_DAMPER_FORCE, Math.min(MAX_DAMPER_FORCE, SPRING_C * compRate));
       const axleMate = this.wheels[this.wheels.indexOf(w) ^ 1]; // L/R pair share an axle
       const arb = ARB_K * (w.compression - axleMate.compression);
       const fz = Math.min(
-        Math.max(SPRING_K * w.compression + SPRING_C * compRate + arb, 0),
+        Math.max(SPRING_K * w.compression + damper + arb, 0),
         MAX_WHEEL_FORCE,
       );
       this.body.applyForce(this.tmpA.copyFrom(up).scaleInPlace(fz), start);
