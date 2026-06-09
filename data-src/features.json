@@ -1,0 +1,18 @@
+{
+  "_comment": "Track features keyed to landmarks with arclength offsets (ds, meters). Tunnel runs from just after Portier to ~220 m before the Nouvelle Chicane (~390 m).",
+  "tunnel": { "from": { "at": "portier", "ds": 45 }, "to": { "at": "chicane", "ds": -220 } },
+  "kerbs": [
+    { "from": { "at": "steDevote", "ds": -35 }, "to": { "at": "steDevote", "ds": 35 } },
+    { "from": { "at": "massenet", "ds": -30 }, "to": { "at": "casino", "ds": 35 } },
+    { "from": { "at": "mirabeau", "ds": -30 }, "to": { "at": "mirabeau", "ds": 25 } },
+    { "from": { "at": "hairpin", "ds": -25 }, "to": { "at": "hairpin", "ds": 25 } },
+    { "from": { "at": "mirabeauBas", "ds": -20 }, "to": { "at": "mirabeauBas", "ds": 20 } },
+    { "from": { "at": "portier", "ds": -25 }, "to": { "at": "portier", "ds": 25 } },
+    { "from": { "at": "chicane", "ds": -35 }, "to": { "at": "chicane", "ds": 35 } },
+    { "from": { "at": "tabac", "ds": -25 }, "to": { "at": "tabac", "ds": 25 } },
+    { "from": { "at": "piscineIn", "ds": -30 }, "to": { "at": "piscineIn", "ds": 30 } },
+    { "from": { "at": "piscineOut", "ds": -30 }, "to": { "at": "piscineOut", "ds": 30 } },
+    { "from": { "at": "rascasse", "ds": -30 }, "to": { "at": "rascasse", "ds": 25 } },
+    { "from": { "at": "antonyNoghes", "ds": -25 }, "to": { "at": "antonyNoghes", "ds": 25 } }
+  ]
+}

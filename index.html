@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Monaco GP</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='46' fill='%23c81e1e'/><circle cx='50' cy='50' r='20' fill='%23111'/></svg>" />
+  <style>
+    :root {
+      --hud-font: "SF Mono", "Menlo", "Consolas", monospace;
+      --title-font: "Futura", "Avenir Next", "Helvetica Neue", sans-serif;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #000; }
+    #renderCanvas { width: 100%; height: 100%; display: block; outline: none; touch-action: none; }
+
+    .overlay {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      z-index: 10;
+    }
+    .hidden { display: none !important; }
+
+    /* ---- Start screen ---- */
+    #startScreen {
+      background: radial-gradient(ellipse at 50% 30%, #1a2c4e 0%, #0a1020 60%, #050810 100%);
+      color: #fff; text-align: center;
+    }
+    #startScreen h1 {
+      font-family: var(--title-font); font-size: clamp(42px, 7vw, 96px);
+      font-weight: 800; letter-spacing: 0.18em; text-transform: uppercase;
+      background: linear-gradient(180deg, #fff 30%, #8fb4e8 100%);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    #startScreen h2 {
+      font-family: var(--title-font); font-size: clamp(14px, 1.6vw, 22px);
+      font-weight: 400; letter-spacing: 0.55em; text-transform: uppercase;
+      color: #c44; margin-top: 6px;
+    }
+    #startBtn {
+      margin-top: 56px; padding: 18px 64px; font-family: var(--title-font);
+      font-size: 20px; font-weight: 700; letter-spacing: 0.3em; text-transform: uppercase;
+      color: #fff; background: linear-gradient(180deg, #c81e1e, #8f1111);
+      border: 1px solid #ff6a6a; border-radius: 6px; cursor: pointer;
+      box-shadow: 0 0 30px rgba(220, 40, 40, 0.35);
+      transition: transform 0.12s ease, box-shadow 0.12s ease;
+    }
+    #startBtn:hover { transform: scale(1.04); box-shadow: 0 0 44px rgba(255, 60, 60, 0.55); }
+    #startBtn:disabled { opacity: 0.5; cursor: wait; transform: none; }
+    #controlsHint {
+      margin-top: 40px; font-family: var(--hud-font); font-size: 13px;
+      color: #7e8aa6; line-height: 2;
+    }
+    #controlsHint b { color: #cdd6ea; font-weight: 600; }
+    #loadingMsg { margin-top: 24px; font-family: var(--hud-font); font-size: 14px; color: #8fb4e8; min-height: 20px; }
+
+    /* ---- Start lights ---- */
+    #startLights {
+      position: absolute; top: 9%; left: 50%; transform: translateX(-50%);
+      display: flex; gap: 18px; z-index: 9;
+      background: #111; padding: 16px 22px; border-radius: 10px;
+      border: 2px solid #2a2a2a; box-shadow: 0 6px 30px rgba(0,0,0,0.6);
+    }
+    .lightCol { display: flex; flex-direction: column; gap: 14px; }
+    .lamp {
+      width: 42px; height: 42px; border-radius: 50%;
+      background: #240505; border: 2px solid #3a0c0c;
+      transition: background 0.05s, box-shadow 0.05s;
+    }
+    .lightCol.lit .lamp {
+      background: radial-gradient(circle at 35% 35%, #ff7b6b, #e01010 65%, #a30505);
+      box-shadow: 0 0 26px rgba(255, 40, 30, 0.9);
+      border-color: #ff5a4a;
+    }
+
+    /* ---- HUD ---- */
+    #hud { position: absolute; inset: 0; z-index: 5; pointer-events: none; font-family: var(--hud-font); }
+    #lapTimes {
+      position: absolute; top: 18px; right: 20px; text-align: right;
+      color: #fff; font-size: 16px; line-height: 1.65;
+      background: rgba(8, 10, 16, 0.55); padding: 10px 16px; border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.08); min-width: 218px;
+    }
+    #lapTimes .row { display: flex; justify-content: space-between; gap: 18px; }
+    #lapTimes .lbl { color: #8a93a8; font-size: 12px; letter-spacing: 0.12em; align-self: center; }
+    #lapCurrent { font-size: 20px; font-weight: 700; }
+    #lapLast { color: #e8e8e8; }
+    #lapBest { color: #b76aff; }
+
+    #dash {
+      position: absolute; bottom: 26px; left: 50%; transform: translateX(-50%);
+      display: flex; align-items: center; gap: 22px;
+      background: rgba(8, 10, 16, 0.55); padding: 12px 26px; border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    #gear {
+      font-size: 46px; font-weight: 800; color: #ffd34d; width: 44px; text-align: center;
+      text-shadow: 0 0 14px rgba(255, 200, 60, 0.4);
+    }
+    #speedBlock { text-align: left; }
+    #speed { font-size: 30px; font-weight: 700; color: #fff; }
+    #speedUnit { font-size: 11px; color: #8a93a8; letter-spacing: 0.15em; }
+    #rpmWrap { width: 260px; }
+    #rpmBar {
+      height: 14px; width: 100%; background: #1a1d26; border-radius: 7px; overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    #rpmFill {
+      height: 100%; width: 0%;
+      background: linear-gradient(90deg, #2ecc71 0%, #f1c40f 60%, #e74c3c 85%);
+      border-radius: 7px;
+    }
+    #rpmBar.limiter #rpmFill { animation: limiterFlash 0.12s steps(2) infinite; }
+    @keyframes limiterFlash { 50% { filter: brightness(2.2); } }
+    #rpmLabel { font-size: 10px; color: #8a93a8; letter-spacing: 0.15em; margin-top: 4px; text-align: center; }
+
+    #minimap {
+      position: absolute; bottom: 22px; left: 22px;
+      background: rgba(8, 10, 16, 0.5); border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    /* ---- Pause ---- */
+    #pauseScreen { background: rgba(4, 6, 12, 0.78); color: #fff; z-index: 20; backdrop-filter: blur(6px); }
+    #pauseScreen h2 {
+      font-family: var(--title-font); font-size: 44px; letter-spacing: 0.3em;
+      text-transform: uppercase; margin-bottom: 36px;
+    }
+    .menuBtn {
+      width: 260px; margin: 8px 0; padding: 14px 0; font-family: var(--title-font);
+      font-size: 16px; font-weight: 600; letter-spacing: 0.25em; text-transform: uppercase;
+      color: #fff; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.25);
+      border-radius: 6px; cursor: pointer; transition: background 0.12s;
+    }
+    .menuBtn:hover { background: rgba(255,255,255,0.2); }
+
+    #fps {
+      position: absolute; top: 10px; left: 12px; z-index: 30;
+      font-family: var(--hud-font); font-size: 12px; color: #5f6;
+      display: none;
+    }
+    body.debug #fps { display: block; }
+  </style>
+</head>
+<body>
+  <canvas id="renderCanvas"></canvas>
+
+  <div id="fps"></div>
+
+  <!-- HUD (hidden until racing) -->
+  <div id="hud" class="hidden">
+    <div id="lapTimes">
+      <div class="row"><span class="lbl">LAP</span><span id="lapCurrent">0:00.000</span></div>
+      <div class="row"><span class="lbl">LAST</span><span id="lapLast">&ndash;:&ndash;&ndash;.&ndash;&ndash;&ndash;</span></div>
+      <div class="row"><span class="lbl">BEST</span><span id="lapBest">&ndash;:&ndash;&ndash;.&ndash;&ndash;&ndash;</span></div>
+    </div>
+    <div id="dash">
+      <div id="gear">N</div>
+      <div id="rpmWrap">
+        <div id="rpmBar"><div id="rpmFill"></div></div>
+        <div id="rpmLabel">RPM</div>
+      </div>
+      <div id="speedBlock">
+        <div id="speed">0</div>
+        <div id="speedUnit">KM/H</div>
+      </div>
+    </div>
+    <canvas id="minimap" width="210" height="270"></canvas>
+  </div>
+
+  <!-- F1 start lights: 5 columns of 2 lamps -->
+  <div id="startLights" class="hidden">
+    <div class="lightCol"><div class="lamp"></div><div class="lamp"></div></div>
+    <div class="lightCol"><div class="lamp"></div><div class="lamp"></div></div>
+    <div class="lightCol"><div class="lamp"></div><div class="lamp"></div></div>
+    <div class="lightCol"><div class="lamp"></div><div class="lamp"></div></div>
+    <div class="lightCol"><div class="lamp"></div><div class="lamp"></div></div>
+  </div>
+
+  <!-- Start screen -->
+  <div id="startScreen" class="overlay">
+    <h1>Monaco</h1>
+    <h2>Grand Prix Circuit</h2>
+    <button id="startBtn">Race</button>
+    <div id="loadingMsg"></div>
+    <div id="controlsHint">
+      <b>W / &uarr;</b> throttle &nbsp;&nbsp; <b>S / &darr;</b> brake &middot; reverse &nbsp;&nbsp;
+      <b>A D / &larr; &rarr;</b> steer<br/>
+      <b>Esc</b> pause &nbsp;&nbsp; <b>R</b> restart
+    </div>
+  </div>
+
+  <!-- Pause screen -->
+  <div id="pauseScreen" class="overlay hidden">
+    <h2>Paused</h2>
+    <button id="resumeBtn" class="menuBtn">Resume</button>
+    <button id="restartBtn" class="menuBtn">Restart Race</button>
+  </div>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

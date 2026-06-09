@@ -1,0 +1,22 @@
+{
+  "_comment": "Elevation control points in meters, keyed to landmarks (optional ds = arclength offset in meters). Anchored to the published 42 m delta between Casino (highest) and La Rascasse (lowest). Tunnel points are offsets from portier/chicane. Interpolated with Fritsch-Carlson monotone cubic.",
+  "points": [
+    { "at": "sf", "h": 7 },
+    { "at": "steDevote", "h": 6 },
+    { "at": "beauRivage", "h": 20 },
+    { "at": "massenet", "h": 38 },
+    { "at": "casino", "h": 42 },
+    { "at": "mirabeau", "h": 30 },
+    { "at": "hairpin", "h": 22 },
+    { "at": "portier", "h": 7 },
+    { "at": "portier", "ds": 45, "h": 7 },
+    { "at": "portier", "ds": 240, "h": 5 },
+    { "at": "chicane", "ds": -220, "h": 3.5 },
+    { "at": "chicane", "h": 2 },
+    { "at": "tabac", "h": 1.5 },
+    { "at": "piscineIn", "h": 1 },
+    { "at": "piscineOut", "h": 1 },
+    { "at": "rascasse", "h": 0 },
+    { "at": "antonyNoghes", "h": 2 }
+  ]
+}

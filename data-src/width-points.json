@@ -1,0 +1,21 @@
+{
+  "_comment": "Track half-widths in meters (wl = left of centerline in driving direction, wr = right), keyed to landmarks. Interpolated with monotone cubic.",
+  "points": [
+    { "at": "sf", "wl": 5.0, "wr": 5.0 },
+    { "at": "steDevote", "wl": 4.5, "wr": 4.5 },
+    { "at": "beauRivage", "wl": 4.0, "wr": 4.0 },
+    { "at": "massenet", "wl": 3.6, "wr": 3.6 },
+    { "at": "casino", "wl": 3.8, "wr": 3.8 },
+    { "at": "mirabeau", "wl": 4.0, "wr": 4.0 },
+    { "at": "hairpin", "wl": 4.2, "wr": 4.2 },
+    { "at": "portier", "wl": 4.0, "wr": 4.0 },
+    { "at": "portier", "ds": 45, "wl": 4.5, "wr": 4.5 },
+    { "at": "chicane", "ds": -220, "wl": 4.5, "wr": 4.5 },
+    { "at": "chicane", "wl": 5.0, "wr": 5.0 },
+    { "at": "tabac", "wl": 4.2, "wr": 4.2 },
+    { "at": "piscineIn", "wl": 3.8, "wr": 3.8 },
+    { "at": "piscineOut", "wl": 3.8, "wr": 3.8 },
+    { "at": "rascasse", "wl": 4.0, "wr": 4.0 },
+    { "at": "antonyNoghes", "wl": 4.2, "wr": 4.2 }
+  ]
+}

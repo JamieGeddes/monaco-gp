@@ -1,0 +1,18 @@
+{
+  "_comment": "WGS84 anchors for Circuit de Monaco corners, derived from curvature analysis of the centerline data itself (tools/build-track.ts snaps each to the nearest centerline point). Tunnel entry/exit are expressed as ds offsets from portier/chicane in the other data files.",
+  "sf": { "lon": 7.42133, "lat": 43.73465 },
+  "steDevote": { "lon": 7.421479, "lat": 43.736934 },
+  "beauRivage": { "lon": 7.424875, "lat": 43.737442 },
+  "massenet": { "lon": 7.427689, "lat": 43.73901 },
+  "casino": { "lon": 7.427179, "lat": 43.739458 },
+  "mirabeau": { "lon": 7.428754, "lat": 43.741101 },
+  "hairpin": { "lon": 7.429613, "lat": 43.740209 },
+  "mirabeauBas": { "lon": 7.429314, "lat": 43.740839 },
+  "portier": { "lon": 7.43029, "lat": 43.74107 },
+  "chicane": { "lon": 7.425485, "lat": 43.737205 },
+  "tabac": { "lon": 7.424962, "lat": 43.737052 },
+  "piscineIn": { "lon": 7.421847, "lat": 43.735424 },
+  "piscineOut": { "lon": 7.422211, "lat": 43.733905 },
+  "rascasse": { "lon": 7.423468, "lat": 43.732507 },
+  "antonyNoghes": { "lon": 7.422478, "lat": 43.732412 }
+}
