@@ -265,12 +265,32 @@ function buildHillBackdrop(scene: Scene, track: TrackData): void {
   const lm = track.landmarks;
   const rng = mulberry32(42);
   const segs: Mesh[] = [];
+
+  // a 330 m lateral offset can land back on another part of the circuit (the
+  // normal near Casino points across to the harbor), putting a giant dark box
+  // face across the road — reject any box whose rotated footprint touches it
+  const overlapsTrack = (cx: number, cz: number, rot: number, width: number, depth: number) => {
+    const c = Math.cos(rot), si = Math.sin(rot);
+    for (let i = 0; i < track.count; i += 2) {
+      const q = track.at(i);
+      const dx = q.x - cx, dz = q.z - cz;
+      const lx = c * dx - si * dz, lz = si * dx + c * dz;
+      if (Math.abs(lx) <= width / 2 + 12 && Math.abs(lz) <= depth / 2 + 12) return true;
+    }
+    return false;
+  };
+
   for (let s = lm.steDevote - 250; s < lm.mirabeau + 150; s += 110) {
     const p = track.pointAt(s);
     const h = 60 + rng() * 80;
-    const box = MeshBuilder.CreateBox('hill', { width: 220 + rng() * 80, depth: 180, height: h }, scene);
-    box.position.set(p.pos.x + p.nx * 330, p.pos.y + h / 2 - 25, p.pos.z + p.nz * 330);
-    box.rotation.y = rng() * Math.PI;
+    const width = 220 + rng() * 80;
+    const depth = 180;
+    const rot = rng() * Math.PI;
+    const cx = p.pos.x + p.nx * 330, cz = p.pos.z + p.nz * 330;
+    if (overlapsTrack(cx, cz, rot, width, depth)) continue;
+    const box = MeshBuilder.CreateBox('hill', { width, depth, height: h }, scene);
+    box.position.set(cx, p.pos.y + h / 2 - 25, cz);
+    box.rotation.y = rot;
     segs.push(box);
   }
   const merged = Mesh.MergeMeshes(segs, true, true);
