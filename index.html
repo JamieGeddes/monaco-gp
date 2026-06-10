@@ -5,10 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Monaco GP</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='46' fill='%23c81e1e'/><circle cx='50' cy='50' r='20' fill='%23111'/></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --hud-font: "SF Mono", "Menlo", "Consolas", monospace;
-      --title-font: "Futura", "Avenir Next", "Helvetica Neue", sans-serif;
+      --hud-font: "IBM Plex Mono", "SF Mono", "Menlo", "Consolas", monospace;
+      --title-font: "Archivo", "Futura", "Avenir Next", "Helvetica Neue", sans-serif;
+      --red: #e10600;
+      --ink: #f2f4f8;
+      --muted: #8b94a7;
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body { width: 100%; height: 100%; overflow: hidden; background: #000; }
@@ -23,36 +29,166 @@
 
     /* ---- Start screen ---- */
     #startScreen {
-      background: radial-gradient(ellipse at 50% 30%, #1a2c4e 0%, #0a1020 60%, #050810 100%);
-      color: #fff; text-align: center;
+      background:
+        radial-gradient(110% 90% at 85% 10%, rgba(225, 6, 0, 0.10), transparent 55%),
+        radial-gradient(90% 110% at 12% 92%, rgba(38, 64, 120, 0.22), transparent 60%),
+        linear-gradient(158deg, #12151d 0%, #0a0c12 48%, #06070b 100%);
+      color: var(--ink);
+      align-items: flex-start; justify-content: center;
+      padding: 0 clamp(24px, 7vw, 110px);
+      overflow: hidden;
     }
+    /* hairline diagonal speed lines + film grain */
+    #startScreen::before {
+      content: ""; position: absolute; inset: 0; pointer-events: none;
+      background: repeating-linear-gradient(115deg, rgba(255,255,255,0.045) 0 1px, transparent 1px 90px);
+      mask-image: linear-gradient(115deg, transparent 25%, #000 80%);
+      -webkit-mask-image: linear-gradient(115deg, transparent 25%, #000 80%);
+    }
+    #startScreen::after {
+      content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0.05;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+
+    /* circuit outline art */
+    #circuitArt {
+      position: absolute; right: 2%; top: 50%;
+      height: 112vh; transform: translateY(-50%) rotate(8deg);
+      pointer-events: none; opacity: 0.95;
+    }
+    #circuitArt .base {
+      fill: none; stroke: rgba(255,255,255,0.22); stroke-width: 2.5;
+      stroke-dasharray: 100; stroke-dashoffset: 100;
+      animation: drawCircuit 2.4s cubic-bezier(0.4, 0, 0.2, 1) 0.35s forwards;
+    }
+    #circuitArt .trace {
+      fill: none; stroke: var(--red); stroke-width: 3; stroke-linecap: round;
+      stroke-dasharray: 7 93;
+      filter: drop-shadow(0 0 7px rgba(225, 6, 0, 0.85));
+      opacity: 0; animation: traceFade 0.8s ease 2.4s forwards, traceLap 9s linear infinite;
+    }
+    @keyframes drawCircuit { to { stroke-dashoffset: 0; } }
+    @keyframes traceFade { to { opacity: 1; } }
+    @keyframes traceLap { from { stroke-dashoffset: 100; } to { stroke-dashoffset: 0; } }
+
+    #startContent { position: relative; display: flex; flex-direction: column; align-items: flex-start; max-width: 720px; }
+    #startContent > * { animation: rise 0.85s cubic-bezier(0.16, 1, 0.3, 1) backwards; }
+    @keyframes rise { from { opacity: 0; transform: translateY(22px); } }
+
+    .eyebrow {
+      display: flex; align-items: center; gap: 14px;
+      font-family: var(--hud-font); font-size: clamp(10px, 1vw, 12px); font-weight: 500;
+      letter-spacing: 0.32em; text-transform: uppercase; color: var(--muted);
+      animation-delay: 0.15s;
+    }
+    .eyebrow::before { content: ""; width: 34px; height: 2px; background: var(--red); }
+
     #startScreen h1 {
-      font-family: var(--title-font); font-size: clamp(42px, 7vw, 96px);
-      font-weight: 800; letter-spacing: 0.18em; text-transform: uppercase;
-      background: linear-gradient(180deg, #fff 30%, #8fb4e8 100%);
-      -webkit-background-clip: text; background-clip: text; color: transparent;
+      margin-top: 18px;
+      font-family: var(--title-font);
+      font-size: clamp(56px, 10.5vw, 150px);
+      font-weight: 850; font-stretch: 122%;
+      font-variation-settings: "wdth" 122;
+      line-height: 0.94; letter-spacing: 0.005em; text-transform: uppercase;
+      color: var(--ink);
+      animation-delay: 0.25s;
     }
     #startScreen h2 {
-      font-family: var(--title-font); font-size: clamp(14px, 1.6vw, 22px);
-      font-weight: 400; letter-spacing: 0.55em; text-transform: uppercase;
-      color: #c44; margin-top: 6px;
+      font-family: var(--title-font);
+      font-size: clamp(30px, 5.4vw, 76px);
+      font-weight: 750; font-stretch: 122%;
+      font-variation-settings: "wdth" 122;
+      line-height: 1.05; letter-spacing: 0.01em; text-transform: uppercase;
+      color: transparent; -webkit-text-stroke: 1.5px rgba(242, 244, 248, 0.38);
+      animation-delay: 0.35s;
     }
+
+    .statRow {
+      display: flex; gap: clamp(20px, 3vw, 44px); margin-top: clamp(24px, 3.2vh, 40px);
+      animation-delay: 0.45s;
+    }
+    .stat { display: flex; flex-direction: column; gap: 5px; }
+    .stat .lbl {
+      font-family: var(--hud-font); font-size: 10px; letter-spacing: 0.26em;
+      text-transform: uppercase; color: var(--muted);
+    }
+    .stat .val {
+      font-family: var(--hud-font); font-size: clamp(15px, 1.5vw, 19px);
+      font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums;
+    }
+    .stat + .stat { border-left: 1px solid rgba(255,255,255,0.12); padding-left: clamp(20px, 3vw, 44px); }
+
     #startBtn {
-      margin-top: 56px; padding: 18px 64px; font-family: var(--title-font);
-      font-size: 20px; font-weight: 700; letter-spacing: 0.3em; text-transform: uppercase;
-      color: #fff; background: linear-gradient(180deg, #c81e1e, #8f1111);
-      border: 1px solid #ff6a6a; border-radius: 6px; cursor: pointer;
-      box-shadow: 0 0 30px rgba(220, 40, 40, 0.35);
-      transition: transform 0.12s ease, box-shadow 0.12s ease;
+      margin-top: clamp(32px, 5vh, 56px);
+      padding: 0; border: none; background: none; cursor: pointer;
+      animation-delay: 0.55s;
     }
-    #startBtn:hover { transform: scale(1.04); box-shadow: 0 0 44px rgba(255, 60, 60, 0.55); }
-    #startBtn:disabled { opacity: 0.5; cursor: wait; transform: none; }
+    #startBtn .chassis {
+      display: flex; align-items: center; gap: 18px;
+      padding: 19px 46px 19px 38px;
+      background: var(--red);
+      transform: skewX(-12deg);
+      box-shadow: 0 10px 40px rgba(225, 6, 0, 0.35);
+      transition: background 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+    }
+    #startBtn .chassis > * { transform: skewX(12deg); }
+    #startBtn .label {
+      font-family: var(--title-font); font-size: 17px; font-weight: 800;
+      font-stretch: 110%; font-variation-settings: "wdth" 110;
+      letter-spacing: 0.22em; text-transform: uppercase; color: #fff;
+    }
+    #startBtn .arrow { color: #fff; font-size: 18px; transition: transform 0.18s ease; }
+    #startBtn:hover .chassis {
+      background: #ff1e17;
+      box-shadow: 0 14px 54px rgba(255, 30, 20, 0.5);
+      transform: skewX(-12deg) translateX(4px);
+    }
+    #startBtn:hover .arrow { transform: skewX(12deg) translateX(5px); }
+    #startBtn:active .chassis { transform: skewX(-12deg) translateX(4px) scale(0.985); }
+    #startBtn:disabled { cursor: wait; }
+    #startBtn:disabled .chassis { background: #571512; box-shadow: none; }
+    #startBtn:disabled .label, #startBtn:disabled .arrow { color: rgba(255,255,255,0.55); }
+
+    #loadingMsg {
+      margin-top: 22px; font-family: var(--hud-font); font-size: 13px;
+      color: var(--muted); min-height: 20px; letter-spacing: 0.06em;
+      animation-delay: 0.55s;
+    }
+
+    #startFooter {
+      position: absolute; left: 0; right: 0; bottom: 0;
+      display: flex; align-items: center; justify-content: space-between; gap: 24px;
+      padding: 20px clamp(24px, 7vw, 110px);
+      border-top: 1px solid rgba(255,255,255,0.08);
+      background: rgba(6, 8, 12, 0.4); backdrop-filter: blur(8px);
+      animation: rise 0.85s cubic-bezier(0.16, 1, 0.3, 1) 0.7s backwards;
+    }
     #controlsHint {
-      margin-top: 40px; font-family: var(--hud-font); font-size: 13px;
-      color: #7e8aa6; line-height: 2;
+      display: flex; flex-wrap: wrap; align-items: center; gap: 8px 22px;
+      font-family: var(--hud-font); font-size: 11.5px; color: var(--muted);
+      letter-spacing: 0.04em;
     }
-    #controlsHint b { color: #cdd6ea; font-weight: 600; }
-    #loadingMsg { margin-top: 24px; font-family: var(--hud-font); font-size: 14px; color: #8fb4e8; min-height: 20px; }
+    #controlsHint .bind { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
+    .key {
+      display: inline-block; padding: 3px 8px; border-radius: 5px;
+      font-family: var(--hud-font); font-size: 10.5px; font-weight: 600; color: #d7dce6;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.18); border-bottom-width: 2px;
+    }
+    #startCredit {
+      font-family: var(--hud-font); font-size: 10px; letter-spacing: 0.24em;
+      text-transform: uppercase; color: rgba(139, 148, 167, 0.6); white-space: nowrap;
+    }
+
+    @media (max-width: 760px) {
+      #circuitArt { right: -40%; opacity: 0.45; }
+      #startCredit { display: none; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      #startContent > *, #startFooter { animation: none; }
+      #circuitArt .base { animation: none; stroke-dashoffset: 0; }
+      #circuitArt .trace { animation: none; opacity: 1; }
+    }
 
     /* ---- Start lights ---- */
     #startLights {
@@ -121,18 +257,21 @@
     }
 
     /* ---- Pause ---- */
-    #pauseScreen { background: rgba(4, 6, 12, 0.78); color: #fff; z-index: 20; backdrop-filter: blur(6px); }
+    #pauseScreen { background: rgba(5, 7, 12, 0.78); color: var(--ink); z-index: 20; backdrop-filter: blur(10px); }
     #pauseScreen h2 {
-      font-family: var(--title-font); font-size: 44px; letter-spacing: 0.3em;
-      text-transform: uppercase; margin-bottom: 36px;
+      font-family: var(--title-font); font-size: 44px; font-weight: 800;
+      font-stretch: 122%; font-variation-settings: "wdth" 122;
+      letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 36px;
     }
     .menuBtn {
-      width: 260px; margin: 8px 0; padding: 14px 0; font-family: var(--title-font);
-      font-size: 16px; font-weight: 600; letter-spacing: 0.25em; text-transform: uppercase;
-      color: #fff; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.25);
-      border-radius: 6px; cursor: pointer; transition: background 0.12s;
+      width: 280px; margin: 7px 0; padding: 15px 0; font-family: var(--title-font);
+      font-size: 14px; font-weight: 700; font-stretch: 110%; font-variation-settings: "wdth" 110;
+      letter-spacing: 0.22em; text-transform: uppercase;
+      color: var(--ink); background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.22);
+      cursor: pointer; transition: background 0.15s, border-color 0.15s;
+      transform: skewX(-12deg);
     }
-    .menuBtn:hover { background: rgba(255,255,255,0.2); }
+    .menuBtn:hover { background: rgba(225, 6, 0, 0.85); border-color: transparent; }
 
     #fps {
       position: absolute; top: 10px; left: 12px; z-index: 30;
@@ -179,14 +318,39 @@
 
   <!-- Start screen -->
   <div id="startScreen" class="overlay">
-    <h1>Monaco</h1>
-    <h2>Grand Prix Circuit</h2>
-    <button id="startBtn">Race</button>
-    <div id="loadingMsg"></div>
-    <div id="controlsHint">
-      <b>W / &uarr;</b> throttle &nbsp;&nbsp; <b>S / &darr;</b> brake &middot; reverse &nbsp;&nbsp;
-      <b>A D / &larr; &rarr;</b> steer<br/>
-      <b>Esc</b> pause &nbsp;&nbsp; <b>R</b> restart
+    <!-- Circuit de Monaco outline, generated from src/data/monaco.json -->
+    <svg id="circuitArt" viewBox="-10 -10 781 1020" aria-hidden="true">
+      <path class="base" pathLength="100" d="M10.1 738.9L8.0 724.6L5.9 710.3L4.2 695.9L2.7 681.5L1.5 667.1L0.5 652.7L0.0 638.2L0.1 623.7L0.5 609.3L1.3 594.8L2.4 580.4L3.9 566.0L6.8 551.8L11.1 538.0L15.7 524.3L19.2 510.2L19.6 495.8L19.5 481.4L30.4 473.0L44.4 469.5L58.8 468.6L73.2 467.2L87.6 465.4L102.0 463.6L116.3 461.7L130.6 459.4L144.7 456.3L158.7 452.5L172.6 448.3L186.4 444.1L200.3 439.9L214.2 435.9L228.1 431.9L242.1 428.2L256.2 425.3L270.5 423.0L284.9 421.3L299.3 420.5L313.4 417.0L326.7 411.5L339.9 405.4L352.9 399.1L365.9 392.8L379.1 386.8L392.4 381.0L406.1 376.6L420.2 373.3L434.4 370.6L448.8 368.5L463.1 366.6L477.4 364.5L491.6 361.7L505.3 356.9L517.9 349.9L529.2 340.9L539.1 330.3L547.5 318.6L552.9 305.2L554.0 290.8L552.3 276.5L548.6 262.5L543.3 249.1L536.0 236.6L524.6 227.8L514.0 218.0L503.4 208.1L497.1 195.2L496.1 180.9L501.3 167.5L508.7 155.0L517.6 143.6L526.6 132.3L535.4 120.8L544.0 109.2L552.7 97.6L561.3 86.0L569.9 74.3L578.5 62.7L587.1 51.0L595.7 39.4L604.3 27.7L612.8 16.1L621.2 4.2L634.5 0.2L647.5 6.1L655.8 17.7L657.8 32.0L658.8 46.4L665.3 59.2L674.1 70.7L681.9 82.9L687.9 96.0L698.8 103.4L709.0 94.4L703.3 82.2L692.7 72.4L683.7 61.1L675.3 49.3L672.1 35.6L679.1 23.4L692.6 18.1L706.6 14.5L720.0 9.2L733.6 4.2L747.9 2.4L759.3 9.8L761.0 24.1L761.0 38.6L760.4 53.0L759.5 67.5L758.4 81.9L756.9 96.3L755.1 110.7L753.0 125.0L750.6 139.3L748.0 153.5L745.1 167.7L741.8 181.8L738.0 195.7L733.6 209.5L728.5 223.0L722.4 236.2L715.6 249.0L708.2 261.4L700.1 273.4L691.4 284.9L682.1 296.1L672.8 307.2L663.5 318.2L653.6 328.8L642.9 338.5L631.1 346.9L618.7 354.4L606.1 361.4L593.3 368.3L580.4 374.8L567.3 381.0L554.3 387.2L541.2 393.5L528.1 399.7L514.9 405.6L501.6 411.1L488.0 416.1L474.2 420.5L460.3 424.5L446.2 428.0L432.1 431.3L418.0 434.3L403.7 436.9L389.4 439.1L375.1 441.2L360.8 443.2L352.1 453.2L347.6 466.6L334.0 471.1L320.6 467.1L306.9 463.9L292.5 465.3L278.1 467.1L263.8 469.0L249.4 471.0L235.1 473.0L220.8 475.0L206.4 477.1L192.1 479.0L177.8 481.1L163.4 483.2L149.1 485.3L134.8 487.5L120.5 489.8L106.2 492.0L91.9 494.1L80.3 501.7L73.4 514.4L67.3 527.5L61.6 540.8L56.6 554.4L53.1 568.5L50.8 582.7L49.4 597.1L49.1 611.6L49.1 626.1L49.4 640.6L55.1 653.6L66.3 662.7L77.6 671.7L84.0 684.5L85.8 698.8L88.1 713.1L90.5 727.4L92.9 741.7L95.4 755.9L98.1 770.1L101.1 784.3L104.5 798.3L99.1 810.9L86.6 818.2L82.7 831.1L86.2 845.2L91.1 858.8L96.3 872.3L102.1 885.6L108.8 898.4L116.6 910.6L125.2 922.2L134.9 932.9L145.8 942.4L158.4 949.5L171.5 955.6L183.9 962.8L189.3 976.0L182.8 987.8L169.1 992.4L155.1 995.8L140.9 998.6L126.5 1000.0L112.1 998.7L101.1 989.8L99.4 975.5L94.6 961.9L85.5 950.7L76.5 939.4L68.8 927.1L60.9 915.0L53.8 902.5L48.7 888.9L44.3 875.1L40.0 861.3L35.9 847.4L31.9 833.5L27.9 819.6L24.1 805.6L20.3 791.7L16.8 777.6L13.9 763.4L11.7 749.1Z" />
+      <path class="trace" pathLength="100" d="M10.1 738.9L8.0 724.6L5.9 710.3L4.2 695.9L2.7 681.5L1.5 667.1L0.5 652.7L0.0 638.2L0.1 623.7L0.5 609.3L1.3 594.8L2.4 580.4L3.9 566.0L6.8 551.8L11.1 538.0L15.7 524.3L19.2 510.2L19.6 495.8L19.5 481.4L30.4 473.0L44.4 469.5L58.8 468.6L73.2 467.2L87.6 465.4L102.0 463.6L116.3 461.7L130.6 459.4L144.7 456.3L158.7 452.5L172.6 448.3L186.4 444.1L200.3 439.9L214.2 435.9L228.1 431.9L242.1 428.2L256.2 425.3L270.5 423.0L284.9 421.3L299.3 420.5L313.4 417.0L326.7 411.5L339.9 405.4L352.9 399.1L365.9 392.8L379.1 386.8L392.4 381.0L406.1 376.6L420.2 373.3L434.4 370.6L448.8 368.5L463.1 366.6L477.4 364.5L491.6 361.7L505.3 356.9L517.9 349.9L529.2 340.9L539.1 330.3L547.5 318.6L552.9 305.2L554.0 290.8L552.3 276.5L548.6 262.5L543.3 249.1L536.0 236.6L524.6 227.8L514.0 218.0L503.4 208.1L497.1 195.2L496.1 180.9L501.3 167.5L508.7 155.0L517.6 143.6L526.6 132.3L535.4 120.8L544.0 109.2L552.7 97.6L561.3 86.0L569.9 74.3L578.5 62.7L587.1 51.0L595.7 39.4L604.3 27.7L612.8 16.1L621.2 4.2L634.5 0.2L647.5 6.1L655.8 17.7L657.8 32.0L658.8 46.4L665.3 59.2L674.1 70.7L681.9 82.9L687.9 96.0L698.8 103.4L709.0 94.4L703.3 82.2L692.7 72.4L683.7 61.1L675.3 49.3L672.1 35.6L679.1 23.4L692.6 18.1L706.6 14.5L720.0 9.2L733.6 4.2L747.9 2.4L759.3 9.8L761.0 24.1L761.0 38.6L760.4 53.0L759.5 67.5L758.4 81.9L756.9 96.3L755.1 110.7L753.0 125.0L750.6 139.3L748.0 153.5L745.1 167.7L741.8 181.8L738.0 195.7L733.6 209.5L728.5 223.0L722.4 236.2L715.6 249.0L708.2 261.4L700.1 273.4L691.4 284.9L682.1 296.1L672.8 307.2L663.5 318.2L653.6 328.8L642.9 338.5L631.1 346.9L618.7 354.4L606.1 361.4L593.3 368.3L580.4 374.8L567.3 381.0L554.3 387.2L541.2 393.5L528.1 399.7L514.9 405.6L501.6 411.1L488.0 416.1L474.2 420.5L460.3 424.5L446.2 428.0L432.1 431.3L418.0 434.3L403.7 436.9L389.4 439.1L375.1 441.2L360.8 443.2L352.1 453.2L347.6 466.6L334.0 471.1L320.6 467.1L306.9 463.9L292.5 465.3L278.1 467.1L263.8 469.0L249.4 471.0L235.1 473.0L220.8 475.0L206.4 477.1L192.1 479.0L177.8 481.1L163.4 483.2L149.1 485.3L134.8 487.5L120.5 489.8L106.2 492.0L91.9 494.1L80.3 501.7L73.4 514.4L67.3 527.5L61.6 540.8L56.6 554.4L53.1 568.5L50.8 582.7L49.4 597.1L49.1 611.6L49.1 626.1L49.4 640.6L55.1 653.6L66.3 662.7L77.6 671.7L84.0 684.5L85.8 698.8L88.1 713.1L90.5 727.4L92.9 741.7L95.4 755.9L98.1 770.1L101.1 784.3L104.5 798.3L99.1 810.9L86.6 818.2L82.7 831.1L86.2 845.2L91.1 858.8L96.3 872.3L102.1 885.6L108.8 898.4L116.6 910.6L125.2 922.2L134.9 932.9L145.8 942.4L158.4 949.5L171.5 955.6L183.9 962.8L189.3 976.0L182.8 987.8L169.1 992.4L155.1 995.8L140.9 998.6L126.5 1000.0L112.1 998.7L101.1 989.8L99.4 975.5L94.6 961.9L85.5 950.7L76.5 939.4L68.8 927.1L60.9 915.0L53.8 902.5L48.7 888.9L44.3 875.1L40.0 861.3L35.9 847.4L31.9 833.5L27.9 819.6L24.1 805.6L20.3 791.7L16.8 777.6L13.9 763.4L11.7 749.1Z" />
+    </svg>
+
+    <div id="startContent">
+      <div class="eyebrow">Circuit de Monte-Carlo &middot; Formula Racing</div>
+      <h1>Monaco</h1>
+      <h2>Grand Prix</h2>
+      <div class="statRow">
+        <div class="stat"><span class="lbl">Length</span><span class="val">3.337 km</span></div>
+        <div class="stat"><span class="lbl">Corners</span><span class="val">19</span></div>
+        <div class="stat"><span class="lbl">Lap Record</span><span class="val">1:12.909</span></div>
+      </div>
+      <button id="startBtn">
+        <span class="chassis">
+          <span class="label">Start Race</span>
+          <span class="arrow">&#8594;</span>
+        </span>
+      </button>
+      <div id="loadingMsg"></div>
+    </div>
+
+    <div id="startFooter">
+      <div id="controlsHint">
+        <span class="bind"><span class="key">W</span><span class="key">&uarr;</span> Throttle</span>
+        <span class="bind"><span class="key">S</span><span class="key">&darr;</span> Brake / Reverse</span>
+        <span class="bind"><span class="key">A</span><span class="key">D</span><span class="key">&larr;</span><span class="key">&rarr;</span> Steer</span>
+        <span class="bind"><span class="key">Esc</span> Pause</span>
+        <span class="bind"><span class="key">R</span> Restart</span>
+      </div>
+      <div id="startCredit">Babylon.js &middot; Havok Physics</div>
     </div>
   </div>
 
